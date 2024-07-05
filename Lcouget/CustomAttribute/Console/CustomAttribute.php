@@ -185,6 +185,11 @@ class CustomAttribute extends Command
 
         //Option to Update Product custom attribute by SKU with passed value
         if ($input->getOption(self::ATTR_PRODUCT_SKU)) {
+            if (!$this->isCustomAttributeEnabled()) {
+                $output->writeln('<info>Module is disabled. Cannot update custom attribute.</info>');
+                return \Magento\Framework\Console\Cli::RETURN_FAILURE;
+            }
+
             $output->writeln(
                 '<info>Provided product SKU is `' .
                 $input->getOption(self::ATTR_PRODUCT_SKU) .
@@ -217,6 +222,12 @@ class CustomAttribute extends Command
 
         //Default option: Update all Products custom attribute with passed value
         if ($input->getArgument(self::ATTR_VALUE)) {
+
+            if (!$this->isCustomAttributeEnabled()) {
+                $output->writeln('<info>Module is disabled. Cannot update custom attribute.</info>');
+                return \Magento\Framework\Console\Cli::RETURN_FAILURE;
+            }
+
             $output->writeln('<info>Provided value is `' . $input->getArgument(self::ATTR_VALUE)[0] . '`</info>');
             $output->writeln('<info>Setting value...</info>');
 
@@ -285,7 +296,6 @@ class CustomAttribute extends Command
                throw new CouldNotSaveException($e->getMessage());
             }
         }
-
     }
 
     /**

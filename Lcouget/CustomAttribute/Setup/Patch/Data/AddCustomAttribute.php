@@ -73,7 +73,7 @@ class AddCustomAttribute implements DataPatchInterface
                 'searchable' => false,
                 'filterable' => false,
                 'comparable' => false,
-                'visible_on_front' => true,
+                'visible_on_front' => false,
                 'used_for_promo_rules' => false,
                 'used_in_product_listing' => true,
                 'unique' => false,
