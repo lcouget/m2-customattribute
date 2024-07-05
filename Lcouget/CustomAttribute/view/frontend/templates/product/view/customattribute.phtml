@@ -1,0 +1,14 @@
+<?php
+/**
+ * @var \Lcouget\CustomAttribute\Block\Product\View\CustomAttribute $block
+ */
+$isEnabled = $block->isEnabled();
+$customAttribute = $block->getCustomAttribute();
+?>
+
+<?php if ($isEnabled && !empty($customAttribute)) : ?>
+    <div class="product-custom-attribute">
+        <span class="label"><?php echo $customAttribute['label']; ?></span>:
+        <?php echo $customAttribute['value']; ?>
+    </div>
+<?php endif; ?>

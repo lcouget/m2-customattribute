@@ -1,0 +1,11 @@
+<?xml version="1.0"?>
+
+<page>
+    <body>
+        <referenceContainer name="product.info.extrahint">
+            <container name="product.info.customattribute" label="Product Custom Attribute" htmlTag="div" htmlClass="product-custom-attribute" after="product.info.social">
+                <block class="Lcouget\CustomAttribute\Block\Product\View\CustomAttribute" name="product.info.showcustomattribute" template="Lcouget_CustomAttribute::product/view/customattribute.phtml" />
+            </container>
+        </referenceContainer>
+    </body>
+</page>
