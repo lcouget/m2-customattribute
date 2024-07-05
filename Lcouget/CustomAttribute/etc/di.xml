@@ -4,7 +4,7 @@
     <type name="Magento\Framework\Console\CommandList">
         <arguments>
             <argument name="commands" xsi:type="array">
-                <item name="customAttribute" xsi:type="object">Lcouget\CustomAttribute\Console\CustomAttribute</item>
+                <item name="custom-attribute_manage" xsi:type="object">Lcouget\CustomAttribute\Console\CustomAttribute</item>
             </argument>
         </arguments>
     </type>
