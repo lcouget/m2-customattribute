@@ -110,5 +110,5 @@
 
 4. Provide access details to the Magento instance where the module is set up and demonstrated.
 
-5. Submit the link to the repository and access details via email to [andred@ciandt.com] until July 8th 11am (or as soon as possible).
+5. Submit the link to the repository and access details via emai until July 8th 11am (or as soon as possible).
 
