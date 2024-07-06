@@ -1,35 +1,55 @@
 <?php
 namespace Lcouget\CustomAttribute\Setup\Patch\Data;
 
-use Magento\Eav\Setup\EavSetup;
+use Magento\Catalog\Model\Product;
+use Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface;
 use Magento\Eav\Setup\EavSetupFactory;
 use Magento\Framework\App\State;
 use Magento\Catalog\Model\Config;
 use Magento\Eav\Api\AttributeManagementInterface;
-
+use Magento\Framework\Exception\InputException;
+use Magento\Framework\Exception\LocalizedException;
+use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Setup\ModuleDataSetupInterface;
 use Magento\Framework\Setup\Patch\DataPatchInterface;
+use Magento\Framework\Validator\ValidateException;
 
 class AddCustomAttribute implements DataPatchInterface
 {
-    const CUSTOM_ATTRIBUTE_CODE = 'lcouget_custom_attribute';
-    const ATTRIBUTE_GROUP_GENERAL = 'Product Details';
+    private const string CUSTOM_ATTRIBUTE_CODE = 'lcouget_custom_attribute';
+    private const string ATTRIBUTE_GROUP_GENERAL = 'Product Details';
 
-    /** @var ModuleDataSetupInterface */
-    private $moduleDataSetup;
+    /**
+     * @var ModuleDataSetupInterface
+     */
+    private ModuleDataSetupInterface $moduleDataSetup;
 
-    /** @var EavSetupFactory */
-    private $eavSetupFactory;
+    /**
+     * @var EavSetupFactory
+     */
+    private EavSetupFactory $eavSetupFactory;
 
-    private $state;
+    /**
+     * @var State
+     */
+    private State $state;
 
-    private $config;
+    /**
+     * @var Config
+     */
+    private Config $config;
 
-    private $attributeManagement;
+    /**
+     * @var AttributeManagementInterface
+     */
+    private AttributeManagementInterface $attributeManagement;
 
     /**
      * @param ModuleDataSetupInterface $moduleDataSetup
      * @param EavSetupFactory $eavSetupFactory
+     * @param State $state
+     * @param Config $config
+     * @param AttributeManagementInterface $attributeManagement
      */
     public function __construct(
         ModuleDataSetupInterface $moduleDataSetup,
@@ -46,16 +66,22 @@ class AddCustomAttribute implements DataPatchInterface
     }
 
     /**
-     * {@inheritdoc}
+     * Apply method
+     *
+     * @return void
+     * @throws InputException
+     * @throws LocalizedException
+     * @throws NoSuchEntityException
+     * @throws ValidateException
      */
-    public function apply()
+    public function apply(): void
     {
         $this->moduleDataSetup->getConnection()->startSetup();
-
-        /** @var EavSetup $eavSetup */
         $eavSetup = $this->eavSetupFactory->create(['setup' => $this->moduleDataSetup]);
 
-        $eavSetup->addAttribute(\Magento\Catalog\Model\Product::ENTITY, self::CUSTOM_ATTRIBUTE_CODE,
+        $eavSetup->addAttribute(
+            Product::ENTITY,
+            self::CUSTOM_ATTRIBUTE_CODE,
             [
                 'type' => 'varchar',
                 'backend' => '',
@@ -63,7 +89,7 @@ class AddCustomAttribute implements DataPatchInterface
                 'label' => 'Custom Attribute',
                 'input' => 'text',
                 'class' => '',
-                'global' => \Magento\Eav\Model\Entity\Attribute\ScopedAttributeInterface::SCOPE_GLOBAL,
+                'global' => ScopedAttributeInterface::SCOPE_GLOBAL,
                 'visible' => true,
                 'required' => false,
                 'user_defined' => true,
@@ -80,7 +106,7 @@ class AddCustomAttribute implements DataPatchInterface
             ]
         );
 
-        $entityTypeId = $eavSetup->getEntityTypeId(\Magento\Catalog\Model\Product::ENTITY);
+        $entityTypeId = $eavSetup->getEntityTypeId(Product::ENTITY);
         $attributeSetIds = $eavSetup->getAllAttributeSetIds($entityTypeId);
 
         foreach ($attributeSetIds as $attributeSetId) {
@@ -100,25 +126,25 @@ class AddCustomAttribute implements DataPatchInterface
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
-    public static function getDependencies()
+    public static function getDependencies(): array
     {
         return [];
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
-    public function getAliases()
+    public function getAliases(): array
     {
         return [];
     }
 
     /**
-     * {@inheritdoc}
+     * @inheritdoc
      */
-    public static function getVersion()
+    public static function getVersion(): string
     {
         return '1.0.0';
     }

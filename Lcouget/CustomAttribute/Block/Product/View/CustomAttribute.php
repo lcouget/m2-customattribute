@@ -2,69 +2,89 @@
 
 namespace Lcouget\CustomAttribute\Block\Product\View;
 
-use Magento\Catalog\Api\ProductRepositoryInterface;
+use Lcouget\CustomAttribute\Helper\Constants;
+use Lcouget\CustomAttribute\Helper\Config;
+use Magento\Catalog\Api\ProductAttributeRepositoryInterface;
 use Magento\Catalog\Model\Product;
-use Magento\Framework\App\Config\ScopeConfigInterface;
+use Magento\Framework\Exception\NoSuchEntityException;
+use Magento\Framework\Registry;
+use Magento\Framework\View\Element\Template\Context;
 
 class CustomAttribute extends \Magento\Framework\View\Element\Template
 {
-
-    private const string CUSTOM_ATTRIBUTE_CODE = 'lcouget_custom_attribute';
-    private const string XML_PATH_CUSTOMATTRIBUTE_ENABLE = 'lcouget_customattribute/general_settings/enable';
     /**
      * @var Product
      */
-    protected $product = null;
+    protected Product|null $product;
 
     /**
-     * Core registry
-     *
-     * @var \Magento\Framework\Registry
+     * @var Registry
      */
-    protected $coreRegistry = null;
+    protected Registry|null $coreRegistry;
 
 
     /**
-     * @var ProductRepositoryInterface
-     *
+     * @var ProductAttributeRepositoryInterface
      */
-    protected $productAttributeRepository;
+    protected ProductAttributeRepositoryInterface $productAttributeRepository;
 
 
     /**
-     * @var ScopeConfigInterface
+     * @var Config
      */
-    protected $scopeConfig;
+    protected Config $config;
 
 
+    /**
+     * @param Context $context
+     * @param ProductAttributeRepositoryInterface $productAttributeRepository
+     * @param Config $config
+     * @param Registry $registry
+     * @param array $data
+     */
     public function __construct(
-        \Magento\Framework\View\Element\Template\Context $context,
-        \Magento\Catalog\Api\ProductAttributeRepositoryInterface $productAttributeRepository,
-        ScopeConfigInterface $scopeConfig,
-        \Magento\Framework\Registry $registry,
+        Context $context,
+        ProductAttributeRepositoryInterface $productAttributeRepository,
+        Config $config,
+        Registry $registry,
         array $data = []
     ) {
+
+        $this->product = null;
         $this->productAttributeRepository = $productAttributeRepository;
         $this->coreRegistry = $registry;
-        $this->scopeConfig = $scopeConfig;
+        $this->config = $config;
 
         parent::__construct($context, $data);
     }
 
-    public function getProduct()
+    /**
+     * Get product
+     *
+     * @return Product|null
+     */
+    public function getProduct(): ?Product
     {
         if (!$this->product) {
             $this->product = $this->coreRegistry->registry('product');
         }
+
         return $this->product;
     }
 
-    public function getCustomAttribute()
+    /**
+     * Get custom attribute
+     *
+     * @return array
+     * @throws NoSuchEntityException
+     */
+    public function getCustomAttribute(): array
     {
         $data =[];
-        if ($this->isEnabled()) {
+
+        if ($this->isCustomAttributeEnabled()) {
             try {
-                $customAttribute = $this->productAttributeRepository->get(self::CUSTOM_ATTRIBUTE_CODE);
+                $customAttribute = $this->productAttributeRepository->get(Constants::CUSTOM_ATTRIBUTE_CODE);
 
                 $data = [
                     'label' => $customAttribute->getStoreLabel(),
@@ -73,21 +93,24 @@ class CustomAttribute extends \Magento\Framework\View\Element\Template
                 ];
 
             } catch (\Magento\Framework\Exception\NoSuchEntityException $e) {
-                //nothing
+                /*throw new NoSuchEntityException(
+                    __('Custom attribute "%1" not found', Constants::CUSTOM_ATTRIBUTE_CODE)
+                );*/
             }
         }
 
         return $data;
     }
 
-    /***
+    /**
+     * Check if custom attribute is enabled
+     *
      * @return bool
      */
-    public function isEnabled()
+    public function isCustomAttributeEnabled(): bool
     {
-        return $this->scopeConfig->getValue(
-            self::XML_PATH_CUSTOMATTRIBUTE_ENABLE,
-            \Magento\Store\Model\ScopeInterface::SCOPE_STORE
-        );
+        return $this->config->isCustomAttributeEnabled();
     }
+
+
 }

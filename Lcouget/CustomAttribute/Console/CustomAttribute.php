@@ -4,17 +4,21 @@ declare(strict_types=1);
 
 namespace Lcouget\CustomAttribute\Console;
 
+use Lcouget\CustomAttribute\Helper\Constants;
+use Lcouget\CustomAttribute\Helper\Config;
 use Magento\Catalog\Model\ResourceModel\Attribute;
 use Magento\Framework\App\Cache\Frontend\Pool;
 use Magento\Framework\App\Cache\TypeListInterface;
-use Magento\Framework\App\Config\ScopeConfigInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
+use Magento\Framework\Console\Cli;
+use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Framework\App\State;
+use Magento\Framework\Exception\StateException;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -22,65 +26,58 @@ use Symfony\Component\Console\Output\OutputInterface;
 
 class CustomAttribute extends Command
 {
-    const CUSTOM_ATTRIBUTE_CODE = 'lcouget_custom_attribute';
-    const XML_PATH_CUSTOMATTRIBUTE_ENABLE = 'lcouget_customattribute/general_settings/enable';
-    const ATTR_PRODUCT_SKU = 'sku';
-    const ATTR_VALUE = 'value';
-    const ATTR_ENABLE = 'enable';
-    const ATTR_DISABLE = 'disable';
-
     /**
-     * @var ScopeConfigInterface
+     * @var Config
      */
-    protected $scopeConfig;
+    protected Config $config;
 
     /**
      * @var WriterInterface
      */
-    protected $configWriter;
+    protected WriterInterface $configWriter;
 
     /**
      * @var TypeListInterface
      */
-    protected $cacheTypeList;
+    protected TypeListInterface $cacheTypeList;
 
     /**
      * @var Pool
      */
-    protected $cacheFrontendPool;
+    protected Pool $cacheFrontendPool;
 
     /**
      * @var Attribute
      */
-    protected $attributeResource;
+    protected Attribute $attributeResource;
 
     /**
      * @var ProductRepositoryInterface
      */
-    protected $productRepository;
+    protected ProductRepositoryInterface $productRepository;
 
     /**
      * @var ProductCollectionFactory
      */
-    protected $productCollectionFactory;
+    protected ProductCollectionFactory $productCollectionFactory;
 
     /**
      * @var State
      */
-    protected $state;
+    protected State $state;
 
 
     /***
-     * @param ScopeConfigInterface       $scopeConfig
+     * @param Config                     $config
      * @param WriterInterface            $configWriter
      * @param TypeListInterface          $cacheTypeList
      * @param Pool                       $cacheFrontendPool
      * @param ProductRepositoryInterface $productRepository
      * @param ProductCollectionFactory   $productCollectionFactory
      * @param State                      $state
- */
+     */
     public function __construct(
-        ScopeConfigInterface        $scopeConfig,
+        Config                      $config,
         WriterInterface             $configWriter,
         TypeListInterface           $cacheTypeList,
         Pool                        $cacheFrontendPool,
@@ -88,7 +85,7 @@ class CustomAttribute extends Command
         ProductCollectionFactory    $productCollectionFactory,
         State                       $state
     ) {
-        $this->scopeConfig              = $scopeConfig;
+        $this->config                   = $config;
         $this->configWriter             = $configWriter;
         $this->cacheTypeList            = $cacheTypeList;
         $this->cacheFrontendPool        = $cacheFrontendPool;
@@ -111,26 +108,26 @@ class CustomAttribute extends Command
 
         //Arguments
         $this->addArgument(
-            self::ATTR_VALUE,
+            Constants::ATTR_VALUE,
             InputOption::VALUE_OPTIONAL,
-            'New custom attribute value'
+            'New custom attribute value (Must be alphanumeric with no whitespaces).'
         );
 
         //Options
         $this->addOption(
-            self::ATTR_ENABLE,
+            Constants::ATTR_ENABLE,
             '-e',
             InputOption::VALUE_NONE,
-            'Enable Custom Attribute'
+            'Enable Custom Attribute for all products'
         );
         $this->addOption(
-            self::ATTR_DISABLE,
+            Constants::ATTR_DISABLE,
             '-d',
             InputOption::VALUE_NONE,
-            'Disable Custom Attribute'
+            'Disable Custom Attribute for all products'
         );
         $this->addOption(
-            self::ATTR_PRODUCT_SKU,
+            Constants::ATTR_PRODUCT_SKU,
             '-s',
             InputOption::VALUE_OPTIONAL,
             'Change custom attribute for selected Product SKU'
@@ -148,51 +145,60 @@ class CustomAttribute extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         //Check if options or arguments are set
-        if (!$this->optionsAreSet($input->getOptions()) && empty($input->getArgument(self::ATTR_VALUE))) {
-            $output->writeln('<error>No options or arguments provided. Use --help for more information.</error>');
-            return \Magento\Framework\Console\Cli::RETURN_FAILURE;
+        if (!$this->optionsAreSet($input->getOptions()) && empty($input->getArgument(Constants::ATTR_VALUE))) {
+            $output->writeln(
+                '<error>No options or arguments provided. Use --help for more information.</error>'
+            );
+            return Cli::RETURN_FAILURE;
         }
 
         //Option to Enable module
-        if ($input->getOption(self::ATTR_ENABLE)) {
-            if ($this->isCustomAttributeEnabled()) {
+        if ($input->getOption(Constants::ATTR_ENABLE)) {
+            if ($this->config->isCustomAttributeEnabled()) {
                 $output->writeln('<info>Module is already enabled.</info>');
-                return \Magento\Framework\Console\Cli::RETURN_FAILURE;
+                return Cli::RETURN_FAILURE;
             }
 
-            $output->writeln('<info>Enabling module!</info>');
+            $output->writeln('<info>Enabling module...</info>');
             $this->toogleEnable(true);
             $this->clearCache('config');
             $output->writeln('<info>Module is now enabled.</info>');
 
-            return \Magento\Framework\Console\Cli::RETURN_SUCCESS;
+            return Cli::RETURN_SUCCESS;
         }
 
         //Option to Disable module
-        if ($input->getOption(self::ATTR_DISABLE)) {
-            if (!$this->isCustomAttributeEnabled()) {
+        if ($input->getOption(Constants::ATTR_DISABLE)) {
+            if (!$this->config->isCustomAttributeEnabled()) {
                 $output->writeln('<info>Module is already disabled.</info>');
-                return \Magento\Framework\Console\Cli::RETURN_FAILURE;
+                return Cli::RETURN_FAILURE;
             }
 
-            $output->writeln('<info>Disabling module!</info>');
+            $output->writeln('<info>Disabling module...</info>');
             $this->toogleEnable(false);
             $this->clearCache('config');
             $output->writeln('<info>Module is now disabled.</info>');
 
-            return \Magento\Framework\Console\Cli::RETURN_SUCCESS;
+            return Cli::RETURN_SUCCESS;
         }
 
         //Option to Update Product custom attribute by SKU with passed value
-        if ($input->getOption(self::ATTR_PRODUCT_SKU)) {
-            if (!$this->isCustomAttributeEnabled()) {
+        if ($input->getOption(Constants::ATTR_PRODUCT_SKU)) {
+            if (!$this->config->isCustomAttributeEnabled()) {
                 $output->writeln('<info>Module is disabled. Cannot update custom attribute.</info>');
-                return \Magento\Framework\Console\Cli::RETURN_FAILURE;
+                return Cli::RETURN_FAILURE;
+            }
+
+            if (!$this->checkParameterRules($input->getArgument(Constants::ATTR_VALUE)[0])) {
+                $output->writeln(
+                    '<error>Provided value is not valid. Use --help for more information.</error>'
+                );
+                return Cli::RETURN_FAILURE;
             }
 
             $output->writeln(
                 '<info>Provided product SKU is `' .
-                $input->getOption(self::ATTR_PRODUCT_SKU) .
+                $input->getOption(Constants::ATTR_PRODUCT_SKU) .
                 '`</info>'
             );
 
@@ -200,13 +206,13 @@ class CustomAttribute extends Command
 
             try {
                 $this->updateProductBySku(
-                    $input->getOption(self::ATTR_PRODUCT_SKU),
-                    $input->getArgument(self::ATTR_VALUE)[0]
+                    $input->getOption(Constants::ATTR_PRODUCT_SKU),
+                    $input->getArgument(Constants::ATTR_VALUE)[0]
                 );
 
                 $output->writeln(
                     '<info>Custom attribute updated successfully for product with SKU `' .
-                    $input->getOption(self::ATTR_PRODUCT_SKU) .
+                    $input->getOption(Constants::ATTR_PRODUCT_SKU) .
                     '`.</info>'
                 );
 
@@ -214,93 +220,115 @@ class CustomAttribute extends Command
                 $output->writeln(
                     '<error>' . $e->getMessage() . '</error>'
                 );
-                return \Magento\Framework\Console\Cli::RETURN_FAILURE;
+                return Cli::RETURN_FAILURE;
             }
 
-            return \Magento\Framework\Console\Cli::RETURN_SUCCESS;
+            return Cli::RETURN_SUCCESS;
         }
 
         //Default option: Update all Products custom attribute with passed value
-        if ($input->getArgument(self::ATTR_VALUE)) {
-
-            if (!$this->isCustomAttributeEnabled()) {
-                $output->writeln('<info>Module is disabled. Cannot update custom attribute.</info>');
-                return \Magento\Framework\Console\Cli::RETURN_FAILURE;
-            }
-
-            $output->writeln('<info>Provided value is `' . $input->getArgument(self::ATTR_VALUE)[0] . '`</info>');
-            $output->writeln('<info>Setting value...</info>');
-
-            try {
-                $this->updateAllProducts($input->getArgument(self::ATTR_VALUE)[0]);
-                $output->writeln('<info>Custom attribute updated successfully for all products.</info>');
-            } catch (LocalizedException|NoSuchEntityException|CouldNotSaveException $e) {
-                $output->writeln(
-                    '<error>' . $e->getMessage() . '</error>'
-                );
-                return \Magento\Framework\Console\Cli::RETURN_FAILURE;
-            }
-
-            return \Magento\Framework\Console\Cli::RETURN_SUCCESS;
+        if (!$this->config->isCustomAttributeEnabled()) {
+            $output->writeln('<info>Module is disabled. Cannot update custom attribute.</info>');
+            return Cli::RETURN_FAILURE;
         }
 
-        return \Magento\Framework\Console\Cli::RETURN_SUCCESS;
-    }
+        if (!$this->checkParameterRules($input->getArgument(Constants::ATTR_VALUE)[0])) {
+            $output->writeln(
+                '<error>Provided value is not valid. Use --help for more information.</error>'
+            );
+            return Cli::RETURN_FAILURE;
+        }
 
-    /***
-     * @return bool
-     */
-    public function isCustomAttributeEnabled(): bool
-    {
-        return (bool) $this->scopeConfig->getValue(
-            self::XML_PATH_CUSTOMATTRIBUTE_ENABLE
+        $output->writeln(
+            '<info>Provided value is `' .
+            $input->getArgument(Constants::ATTR_VALUE)[0] .
+            '`</info>'
         );
+
+        $output->writeln('<info>Setting value...</info>');
+
+        try {
+            $this->updateAllProducts($input->getArgument(Constants::ATTR_VALUE)[0]);
+            $output->writeln('<info>Custom attribute updated successfully for all products.</info>');
+        } catch (LocalizedException|NoSuchEntityException|CouldNotSaveException $e) {
+            $output->writeln(
+                '<error>' . $e->getMessage() . '</error>'
+            );
+            return Cli::RETURN_FAILURE;
+        }
+
+        return Cli::RETURN_SUCCESS;
     }
 
     /***
-     * @param false $enable
+     * Enable/disable custom attribute
+     *
+     * @param bool $enable
      * @return void
      */
     private function toogleEnable(bool $enable = false): void
     {
         $value = $enable ? 1 : 0;
         $this->configWriter->save(
-            self::XML_PATH_CUSTOMATTRIBUTE_ENABLE,
+            Constants::XML_PATH_CUSTOMATTRIBUTE_ENABLE,
             $value
         );
     }
 
     /***
-     * @param $value
+     * Update all products
+     *
+     * @param string $value
      * @return void
+     * @throws CouldNotSaveException
+     * @throws NoSuchEntityException
+     * @throws InputException
+     * @throws StateException
+     * @throws LocalizedException
      */
-    private function updateAllProducts($value): void
+    private function updateAllProducts(string $value): void
     {
         try {
             $this->state->setAreaCode(\Magento\Framework\App\Area::AREA_GLOBAL);
         } catch (\Magento\Framework\Exception\LocalizedException $e) {
-           throw new LocalizedException($e->getMessage());
+            throw new LocalizedException(
+                __('An error has occurred while updating the custom attribute. Please try again.')
+            );
         }
 
         $productCollection = $this->productCollectionFactory->create();
-        $productCollection->addAttributeToSelect(self::CUSTOM_ATTRIBUTE_CODE);
+        $productCollection->addAttributeToSelect(Constants::CUSTOM_ATTRIBUTE_CODE);
 
         foreach ($productCollection as $product) {
             try {
-                $product->setData(self::CUSTOM_ATTRIBUTE_CODE, $value);
+                $product->setData(Constants::CUSTOM_ATTRIBUTE_CODE, $value);
                 $this->productRepository->save($product);
 
             } catch (NoSuchEntityException $e) {
-                throw new NoSuchEntityException($e->getMessage());
+                throw new NoSuchEntityException(
+                    __('The product was not found. Please try again.')
+                );
             } catch (CouldNotSaveException $e) {
-               throw new CouldNotSaveException($e->getMessage());
+                throw new CouldNotSaveException(
+                    __('The custom attribute was unable to be saved. Please try again.')
+                );
+            } catch (InputException $e) {
+                throw new InputException(
+                    __('An error has occurred while updating the custom attribute. Please try again.')
+                );
+            } catch (StateException $e) {
+                throw new StateException(
+                    __('An error has occurred while updating the custom attribute. Please try again.')
+                );
             }
         }
     }
 
     /**
-     * @param $sku
-     * @param $value
+     * Updates product by selected SKU
+     *
+     * @param string $sku
+     * @param string $value
      * @return void
      * @throws CouldNotSaveException
      * @throws LocalizedException
@@ -308,45 +336,55 @@ class CustomAttribute extends Command
      * @throws \Magento\Framework\Exception\InputException
      * @throws \Magento\Framework\Exception\StateException
      */
-    private function updateProductBySku($sku, $value): void
+    private function updateProductBySku(string $sku, string $value): void
     {
         try {
             $this->state->setAreaCode(\Magento\Framework\App\Area::AREA_GLOBAL);
         } catch (\Magento\Framework\Exception\LocalizedException $e) {
-            throw new LocalizedException($e->getMessage());
+            throw new LocalizedException(
+                __('An error has occurred while updating the custom attribute. Please try again.')
+            );
         }
 
         try {
             $product = $this->productRepository->get($sku);
-            $product->setData(self::CUSTOM_ATTRIBUTE_CODE, $value);
+            $product->setData(Constants::CUSTOM_ATTRIBUTE_CODE, $value);
             $this->productRepository->save($product);
         } catch (NoSuchEntityException $e) {
-            throw new NoSuchEntityException($e->getMessage());
+            throw new NoSuchEntityException(
+                __('The product was not found. Please try again.')
+            );
         } catch (CouldNotSaveException $e) {
-            throw new CouldNotSaveException($e->getMessage());
+            throw new CouldNotSaveException(
+                __('The custom attribute was unable to be saved. Please try again.')
+            );
         }
     }
 
     /***
-     * @param $cacheType
+     * Used to clear cache
+     *
+     * @param string $cacheType
      * @return void
      */
-    private function clearCache($cacheType): void
+    private function clearCache(string $cacheType): void
     {
         $this->cacheTypeList->cleanType($cacheType);
         $this->cacheFrontendPool->get($cacheType)->getBackend()->clean();
     }
 
     /***
-     * @param $options
+     * Check if selected options are set
+     *
+     * @param array $options
      * @return bool
      */
-    private function optionsAreSet($options): bool
+    private function optionsAreSet(array $options): bool
     {
         $inputOptions = [
-            self::ATTR_ENABLE,
-            self::ATTR_DISABLE,
-            self::ATTR_PRODUCT_SKU
+            Constants::ATTR_ENABLE,
+            Constants::ATTR_DISABLE,
+            Constants::ATTR_PRODUCT_SKU
         ];
 
         foreach ($options as $option) {
@@ -356,4 +394,25 @@ class CustomAttribute extends Command
         }
         return false;
     }
+
+    /**
+     * Set of basic validation rules
+     *
+     * @param string $parameter
+     * @return bool
+     */
+    private function checkParameterRules(string $parameter): bool
+    {
+        //check alphanumeric
+        if (!preg_match('/^[a-zA-Z0-9]+$/', $parameter) || !ctype_alnum($parameter)) {
+            return false;
+        }
+
+        //no whitespaces
+        if (preg_match('/\s/', $parameter)) {
+            return false;
+        }
+        return true;
+    }
+
 }

@@ -2,21 +2,21 @@
 /**
  * @var \Lcouget\CustomAttribute\Block\Product\View\CustomAttribute $block
  */
-$isEnabled = $block->isEnabled();
+$isEnabled = $block->isCustomAttributeEnabled();
 $customAttribute = $block->getCustomAttribute();
 ?>
 
 <?php if ($isEnabled && !empty($customAttribute)) : ?>
-    <div class="product-custom-attribute-value field name">
+    <div class="custom-attribute-value">
         <span class="label"><?=$customAttribute['label'] ?></span>:
-        <?= $customAttribute['value'] ?>
+        <span class="value"><?=$customAttribute['value'] ?></span>
     </div>
 
     <!-- Custom Attribute Validation Form -->
-    <div class="product-custom-attribute-input">
+    <div class="custom-attribute-validation">
         <form id="custom-attribute-form" >
             <fieldset class="fieldset">
-                <div class="field name required">
+                <div class="custom-attribute-field field name required">
                     <label class="label" for="custom-attribute-field-input"><span>Custom Attribute Validation</span></label>
                     <div class="control">
                         <input name="custom-attribute-field-input" id="custom-attribute-field-input" title="Custom Attribute" value="<?= $customAttribute['value'] ?>" class="input-text" type="text"/>
@@ -26,7 +26,7 @@ $customAttribute = $block->getCustomAttribute();
             <div class="actions-toolbar">
                 <div class="primary">
                     <button type="submit" title="Submit" class="action submit primary">
-                        <span>Submit</span>
+                        <span>Validate Rules</span>
                     </button>
                 </div>
             </div>
