@@ -28,7 +28,7 @@ class ValidationRules
         $rules = $proceed($attribute, $data);
         if ($attribute->getAttributeCode() === Constants::CUSTOM_ATTRIBUTE_CODE) {
 
-            $rules =[
+            $rules = [
                 'no-whitespace' => true,
                 'alphanumeric' => true
             ];
