@@ -12,10 +12,19 @@ use PHPUnit\Framework\TestCase;
 class HideInputTest extends TestCase
 {
 
+    /**
+     * @var ProductDataProvider
+     */
     private $productDataProvider;
 
+    /**
+     * @var ConfigHelper
+     */
     private $configHelper;
 
+    /**
+     * @var HideInput
+     */
     private $plugin;
 
     protected function setUp(): void
