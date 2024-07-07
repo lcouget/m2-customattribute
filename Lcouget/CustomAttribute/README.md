@@ -56,7 +56,8 @@ After Module installation, inside admin page you should see a new menu option `L
 **Custom Attribute Settings** options an go to **General Configuration** section. Then set **Enable** option to **Yes**
 and click on **Save Config** button.
 
-<image 1>
+![01-2024-07-06_18-45](https://github.com/lcouget/m2-customattribute/assets/8595500/d8b5c8cb-a6ef-421f-bff6-2db9f63bf5cf)
+
 
 The clear **Configuration** cache to see the changes.
 
@@ -69,30 +70,41 @@ You can also enable/disable the module by using `custom-attribute:manage` CLI co
 By default, custom attribute is added to all products, so you can set custom attribute inside Product Attribute Page on adminhtml.
 
 After custom attribute value set, click on Save button. You should see changes on Frontend Product Detail Page.
-<image 2>
+
+![02-2024-07-06_18-56](https://github.com/lcouget/m2-customattribute/assets/8595500/843f1c6c-af7e-4ea5-8d01-7f35f986e193)
+
 
 #### Attribute display
 As mentioned before, custom attribute is added on Product Attributes Page.
-<image 2>
+
+![02-2024-07-06_18-56](https://github.com/lcouget/m2-customattribute/assets/8595500/22a9d327-0931-41f6-97f7-7ada54cd770a)
+
 
 This new attribute is also added on Catalog product grid.
-<image 5>
+
+![05-2024-07-06_19-09](https://github.com/lcouget/m2-customattribute/assets/8595500/86444d4f-75a4-41ae-a69d-7fb07de82bd5)
+
 
 ### Frontend Changes
 
-Custom attribute is shown on Product Detail Page on Frontend. It also adds a small form for
+Custom attribute is shown on Product Detail Page on Frontend. 
+
+![03-2024-07-06_18-59](https://github.com/lcouget/m2-customattribute/assets/8595500/ce3a53d4-f198-4c29-8e00-e65ddfd8de1a)
+
+It also adds a small form for
 validation testing purposes only. 
-<image 3>
+
+![04-2024-07-06_19-02](https://github.com/lcouget/m2-customattribute/assets/8595500/00e7fc2b-3805-47ef-9c66-86607b78c784)
+
 _Note: this form doesn't change custom attribute value, it only retun an error
 if some validation rule fails._
-
-<image 4>
 
 ### CLI
 There is also a Console command to execute via CLI. To see all available options, run 
     `php bin/magento custom-attribute:manage [options] new_custom_attribute_value`
 
-<image 6>
+![06-2024-07-06_19-14](https://github.com/lcouget/m2-customattribute/assets/8595500/0f7a7a1b-07be-4b91-8ce0-184e53981d64)
+
 
 #### Command Options
 
