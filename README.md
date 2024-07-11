@@ -112,7 +112,7 @@ There is also a Console command to execute via CLI. To see all available options
 
 Example: `php bin/magento custom-attribute:manage NewValue`
 
-- **Update Attribute - All products (asyncrhonously --async or -a): Update custom attribute value to all products asynchronously. (AMQP/RabbitMQ installation required)
+- **Update Attribute - All products (asyncrhonously --async or -a)**: Update custom attribute value to all products asynchronously. (AMQP/RabbitMQ installation required)
 
   Example: `php bin/magento custom-attribute:manage --async NewValue`
 
