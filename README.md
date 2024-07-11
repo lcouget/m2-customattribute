@@ -134,3 +134,5 @@ _Note 2: New attribute value is also validated with same validation rules applie
 - 1.0.1:
     - uptateAllProducts Console method optimized.
     - added AMQP to perform updateAllProducts option asynchronously.
+- 1.0.2:
+  - Replaced Constant helper class with enum.

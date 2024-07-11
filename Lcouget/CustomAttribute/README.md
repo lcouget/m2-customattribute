@@ -8,16 +8,16 @@ This is an example module creation development that creates a Product Custom Att
 - Installation of Product custom attribute (`lcouget_custom_attribute`) and automatically set into `Default` Attribute Set.
 - Custom Attribute is shown on Product Detail Page.
 - It also includes a custon Attribute rule validation form for rule validation testing purposes only. It validates the following rules:
-  - required.
-  - no-whitespaces.
-  - alphanumeric.
+    - required.
+    - no-whitespaces.
+    - alphanumeric.
 - Admin Page:
-  - On admin side, custom Attribute is added on all products inside **Default** Attribute Set.
-  - Feature toggle: Enable/Disable custom attribute usability and display with System Flag.
+    - On admin side, custom Attribute is added on all products inside **Default** Attribute Set.
+    - Feature toggle: Enable/Disable custom attribute usability and display with System Flag.
 - CLI module handle:
-  - There is a console command to handle module via CLI (see CLI section)
+    - There is a console command to handle module via CLI (see CLI section)
 
-  
+
 ## Installation
 
 ### Prerequisites
@@ -29,19 +29,19 @@ This is an example module creation development that creates a Product Custom Att
 
 - Install Vanilla Magento 2.4.6 or above.
 - To ensure correct testing, it is recommended to install Sample Data by using this command:
-  `bin/magento sampledata:deploy`. You can also create just a catalog with few products. 
+  `bin/magento sampledata:deploy`. You can also create just a catalog with few products.
 - Get Custom Attribute module code from github. [(Download here)](https://github.com/lcouget/m2-customattribute/archive/refs/heads/master.zip)
 - Unzip downloaded file and go inside `m2-customattribute-master` folder.
 - Copy `Lcouget` folder inside your Magento instance `app/code` folder.
 - At this point, you can check if module is detected bu using the command:
-  - `php bin/magento module:status --disabled`
-  - The module `Lcouget_CustomAttribute` should appear as disabled.
+    - `php bin/magento module:status --disabled`
+    - The module `Lcouget_CustomAttribute` should appear as disabled.
 - Proceed to install the module by using this commands on your Magento `root` folder:
-  - `php bin/magento module:enable Lcouget_CustomAttribute`
-  - `php bin/magento setup:upgrade` 
-  - `php bin/magento setup:di:compile`
-  - `php bin/magento setup:static-content:deploy`
-  - `php bin/magento cache:flush`
+    - `php bin/magento module:enable Lcouget_CustomAttribute`
+    - `php bin/magento setup:upgrade`
+    - `php bin/magento setup:di:compile`
+    - `php bin/magento setup:static-content:deploy`
+    - `php bin/magento cache:flush`
 - Done! The module is ready to use!
 
 ## Usability
@@ -52,7 +52,7 @@ This is an example module creation development that creates a Product Custom Att
 
 - **Option 1: Feature Toggle**
 
-After Module installation, inside admin page you should see a new menu option `Lcouget`. Click on 
+After Module installation, inside admin page you should see a new menu option `Lcouget`. Click on
 **Custom Attribute Settings** options an go to **General Configuration** section. Then set **Enable** option to **Yes**
 and click on **Save Config** button.
 
@@ -87,12 +87,12 @@ This new attribute is also added on Catalog product grid.
 
 ### Frontend Changes
 
-Custom attribute is shown on Product Detail Page on Frontend. 
+Custom attribute is shown on Product Detail Page on Frontend.
 
 ![03-2024-07-06_18-59](https://github.com/lcouget/m2-customattribute/assets/8595500/ce3a53d4-f198-4c29-8e00-e65ddfd8de1a)
 
 It also adds a small form for
-validation testing purposes only. 
+validation testing purposes only.
 
 ![04-2024-07-06_19-02](https://github.com/lcouget/m2-customattribute/assets/8595500/00e7fc2b-3805-47ef-9c66-86607b78c784)
 
@@ -100,28 +100,39 @@ _Note: this form doesn't change custom attribute value, it only retun an error
 if some validation rule fails._
 
 ### CLI
-There is also a Console command to execute via CLI. To see all available options, run 
-    `php bin/magento custom-attribute:manage [options] new_custom_attribute_value`
+There is also a Console command to execute via CLI. To see all available options, run
+`php bin/magento custom-attribute:manage [options] new_custom_attribute_value`
 
 ![06-2024-07-06_19-14](https://github.com/lcouget/m2-customattribute/assets/8595500/0f7a7a1b-07be-4b91-8ce0-184e53981d64)
 
 
 #### Command Options
 
-- **Update attribute - all products (default)**: With no options, the default behavior is to update custom attribute value to all products. _Note: this process could take a while to finish depending on Catalog size_. 
+- **Update attribute - all products (default)**: With no options, the default behavior is to update custom attribute value to all products. _Note: this process could take a while to finish depending on Catalog size_.
 
 Example: `php bin/magento custom-attribute:manage NewValue`
 
-- **Update attribute - selected product (sku)**: You can just update custom attribute on selected product by setting sku option.
+- **Update Attribute - All products (asyncrhonously --async or -a)**: Update custom attribute value to all products asynchronously. (AMQP/RabbitMQ installation required)
+
+  Example: `php bin/magento custom-attribute:manage --async NewValue`
+
+- **Update attribute - selected product (--sku or -s)**: You can just update custom attribute on selected product by setting sku option.
 
 Example: `php bin/magento custom-attribute:manage --sku=24-MB01 NewValue`
 
 - **Feature toggle**: You can enable/disable module with --enable (or -e) and --disable (or -d) option
-  
+
 Example: `php bin/magento custom-attribute:manage --enable`
 
 _Note: on all options, caches are automatically refreshed._
 
 _Note 2: New attribute value is also validated with same validation rules applied on frontend._
 
-
+### Released Versions
+- 1.0.0:
+    - Initial Release.
+- 1.0.1:
+    - uptateAllProducts Console method optimized.
+    - added AMQP to perform updateAllProducts option asynchronously.
+- 1.0.2:
+    - Replaced Constant helper class with enum.
