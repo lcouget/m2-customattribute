@@ -112,7 +112,11 @@ There is also a Console command to execute via CLI. To see all available options
 
 Example: `php bin/magento custom-attribute:manage NewValue`
 
-- **Update attribute - selected product (sku)**: You can just update custom attribute on selected product by setting sku option.
+- **Update Attribute - All products (asyncrhonously --async or -a): Update custom attribute value to all products asynchronously. (AMQP/RabbitMQ installation required)
+
+  Example: `php bin/magento custom-attribute:manage --async NewValue`
+
+- **Update attribute - selected product (--sku or -s)**: You can just update custom attribute on selected product by setting sku option.
 
 Example: `php bin/magento custom-attribute:manage --sku=24-MB01 NewValue`
 
