@@ -136,3 +136,4 @@ _Note 2: New attribute value is also validated with same validation rules applie
     - added AMQP to perform updateAllProducts option asynchronously.
 - 1.0.2:
   - Replaced Constant helper class with enum.
+  - Removed Constant types (php <8.3 compatibility).
