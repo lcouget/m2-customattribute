@@ -1,6 +1,6 @@
 {
   "name": "lcouget/m2-custom-attribute",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Custom Attribute addition",
   "type": "magento2-module",
   "require": {

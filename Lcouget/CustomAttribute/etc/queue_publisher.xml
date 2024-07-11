@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework-message-queue:etc/publisher.xsd">
+    <!-- topic: Name of topic-->
+    <publisher topic="lcouget.customattribute.topic">
+        <!-- name: For AMQP connections, the connection name must match the connection attribute in the queue_topology.xml file. Otherwise, the connection name must be db -->
+        <!-- exchange: The name of the exchange to publish to. The default system exchange name is magento -->
+        <connection name="amqp" exchange="magento" /> <!-- Advanced Message Queuing Protocol  -->
+    </publisher>
+</config>

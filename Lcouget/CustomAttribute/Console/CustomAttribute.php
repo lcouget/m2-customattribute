@@ -11,14 +11,15 @@ use Magento\Framework\App\Cache\Frontend\Pool;
 use Magento\Framework\App\Cache\TypeListInterface;
 use Magento\Framework\App\Config\Storage\WriterInterface;
 use Magento\Framework\Console\Cli;
-use Magento\Framework\Exception\InputException;
 use Magento\Framework\Exception\LocalizedException;
 use Magento\Framework\Exception\NoSuchEntityException;
 use Magento\Framework\Exception\CouldNotSaveException;
 use Magento\Catalog\Api\ProductRepositoryInterface;
 use Magento\Catalog\Model\ResourceModel\Product\CollectionFactory as ProductCollectionFactory;
 use Magento\Framework\App\State;
-use Magento\Framework\Exception\StateException;
+use Magento\Framework\Json\Helper\Data as JsonHelper;
+use Magento\Framework\MessageQueue\PublisherInterface;
+use Magento\Catalog\Model\Product\Action as ProductAction;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -66,6 +67,21 @@ class CustomAttribute extends Command
      */
     protected State $state;
 
+    /**
+     * @var PublisherInterface
+     */
+    protected PublisherInterface $publisher;
+
+    /**
+     * @var JsonHelper
+     */
+    private $jsonHelper;
+
+    /**
+     * @var ProductAction
+     */
+    private $productAction;
+
 
     /***
      * @param Config                     $config
@@ -74,6 +90,9 @@ class CustomAttribute extends Command
      * @param Pool                       $cacheFrontendPool
      * @param ProductRepositoryInterface $productRepository
      * @param ProductCollectionFactory   $productCollectionFactory
+     * @param ProductAction              $productAction
+     * @param PublisherInterface         $publisher
+     * @param JsonHelper                 $jsonHelper
      * @param State                      $state
      */
     public function __construct(
@@ -83,6 +102,9 @@ class CustomAttribute extends Command
         Pool                        $cacheFrontendPool,
         ProductRepositoryInterface  $productRepository,
         ProductCollectionFactory    $productCollectionFactory,
+        ProductAction               $productAction,
+        PublisherInterface          $publisher,
+        JsonHelper                  $jsonHelper,
         State                       $state
     ) {
         $this->config                   = $config;
@@ -91,6 +113,9 @@ class CustomAttribute extends Command
         $this->cacheFrontendPool        = $cacheFrontendPool;
         $this->productRepository        = $productRepository;
         $this->productCollectionFactory = $productCollectionFactory;
+        $this->productAction            = $productAction;
+        $this->publisher                = $publisher;
+        $this->jsonHelper               = $jsonHelper;
         $this->state                    = $state;
 
         parent::__construct('custom-attribute:manage');
@@ -131,6 +156,12 @@ class CustomAttribute extends Command
             '-s',
             InputOption::VALUE_OPTIONAL,
             'Change custom attribute for selected Product SKU'
+        );
+        $this->addOption(
+            Constants::ATTR_ASYNC,
+            '-a',
+            InputOption::VALUE_NONE,
+            'Change custom attribute for all products asynchronously'
         );
 
         parent::configure();
@@ -226,6 +257,24 @@ class CustomAttribute extends Command
             return Cli::RETURN_SUCCESS;
         }
 
+        //Option to Update all Products custom attribute with passed value asynchronously
+        if ($input->getOption(Constants::ATTR_ASYNC)) {
+            if (!$this->config->isCustomAttributeEnabled()) {
+                $output->writeln('<info>Module is disabled. Cannot update custom attribute.</info>');
+                return Cli::RETURN_FAILURE;
+            }
+
+            if (!$this->checkParameterRules($input->getArgument(Constants::ATTR_VALUE)[0])) {
+                $output->writeln(
+                    '<error>Provided value is not valid. Use --help for more information.</error>'
+                );
+                return Cli::RETURN_FAILURE;
+            }
+
+            $this->asyncUpdateAllProducts($input->getArgument(Constants::ATTR_VALUE)[0]);
+            return Cli::RETURN_SUCCESS;
+        }
+
         //Default option: Update all Products custom attribute with passed value
         if (!$this->config->isCustomAttributeEnabled()) {
             $output->writeln('<info>Module is disabled. Cannot update custom attribute.</info>');
@@ -275,15 +324,11 @@ class CustomAttribute extends Command
         );
     }
 
-    /***
-     * Update all products
+    /**
+     * Update all products (Optimized version)
      *
      * @param string $value
      * @return void
-     * @throws CouldNotSaveException
-     * @throws NoSuchEntityException
-     * @throws InputException
-     * @throws StateException
      * @throws LocalizedException
      */
     private function updateAllProducts(string $value): void
@@ -296,32 +341,30 @@ class CustomAttribute extends Command
             );
         }
 
-        $productCollection = $this->productCollectionFactory->create();
-        $productCollection->addAttributeToSelect(Constants::CUSTOM_ATTRIBUTE_CODE);
+        try {
+            $productCollection = $this->productCollectionFactory->create();
+            $productIds = $productCollection->getAllIds();
 
-        foreach ($productCollection as $product) {
-            try {
-                $product->setData(Constants::CUSTOM_ATTRIBUTE_CODE, $value);
-                $this->productRepository->save($product);
-
-            } catch (NoSuchEntityException $e) {
-                throw new NoSuchEntityException(
-                    __('The product was not found. Please try again.')
-                );
-            } catch (CouldNotSaveException $e) {
-                throw new CouldNotSaveException(
-                    __('The custom attribute was unable to be saved. Please try again.')
-                );
-            } catch (InputException $e) {
-                throw new InputException(
-                    __('An error has occurred while updating the custom attribute. Please try again.')
-                );
-            } catch (StateException $e) {
-                throw new StateException(
-                    __('An error has occurred while updating the custom attribute. Please try again.')
-                );
-            }
+            $this->productAction->updateAttributes(
+                $productIds,
+                [Constants::CUSTOM_ATTRIBUTE_CODE => $value],
+                0
+            );
+        } catch (\Exception $e) {
+            throw new LocalizedException(
+                __('An error has occurred while updating the custom attribute. Please try again.')
+            );
         }
+    }
+
+    /**
+     * @param string $value
+     * @return void
+     */
+    private function asyncUpdateAllProducts(string $value): void
+    {
+        $publishData = [ 'custom_attribute_value' => $value ];
+        $this->publisher->publish(Constants::QUEUE_TOPIC, $this->jsonHelper->jsonEncode($publishData));
     }
 
     /**

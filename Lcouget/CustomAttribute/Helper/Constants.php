@@ -9,4 +9,7 @@ class Constants
     public const string ATTR_VALUE = 'value';
     public const string ATTR_ENABLE = 'enable';
     public const string ATTR_DISABLE = 'disable';
+    public const string QUEUE_TOPIC = 'lcouget.customattribute.topic';
+    public const string ATTR_ASYNC = 'async';
+
 }
