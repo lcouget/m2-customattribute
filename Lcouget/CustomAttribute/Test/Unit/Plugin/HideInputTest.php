@@ -59,9 +59,9 @@ class HideInputTest extends TestCase
         $metaData = [
            'product-details' => [
                 'children' => [
-                    'container_' . Constants::CUSTOM_ATTRIBUTE_CODE => [
+                    'container_' . Constants::CUSTOM_ATTRIBUTE_CODE->value => [
                         'children' => [
-                            Constants::CUSTOM_ATTRIBUTE_CODE => [
+                            Constants::CUSTOM_ATTRIBUTE_CODE->value => [
                                 'arguments' => [
                                     'data' => [
                                         'config' => [
@@ -79,9 +79,9 @@ class HideInputTest extends TestCase
         $result = [
            'product-details' => [
                'children' => [
-                   'container_' . Constants::CUSTOM_ATTRIBUTE_CODE => [
+                   'container_' . Constants::CUSTOM_ATTRIBUTE_CODE->value => [
                        'children' => [
-                           Constants::CUSTOM_ATTRIBUTE_CODE => [
+                           Constants::CUSTOM_ATTRIBUTE_CODE->value => [
                                'arguments' => [
                                    'data' => [
                                        'config' => [
@@ -114,9 +114,9 @@ class HideInputTest extends TestCase
         $metaData = [
             'product-details' => [
                 'children' => [
-                    'container_' . Constants::CUSTOM_ATTRIBUTE_CODE => [
+                    'container_' . Constants::CUSTOM_ATTRIBUTE_CODE->value => [
                         'children' => [
-                            Constants::CUSTOM_ATTRIBUTE_CODE => [
+                            Constants::CUSTOM_ATTRIBUTE_CODE->value => [
                                 'arguments' => [
                                     'data' => [
                                         'config' => [

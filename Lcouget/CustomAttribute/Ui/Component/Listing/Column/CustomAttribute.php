@@ -82,7 +82,7 @@ class CustomAttribute extends Column
         if (isset($dataSource['data']['items'])) {
             foreach ($dataSource['data']['items'] as & $item) {
                 $product = $this->productRepository->getById($item['entity_id']);
-                $attrCode = Constants::CUSTOM_ATTRIBUTE_CODE;
+                $attrCode = Constants::CUSTOM_ATTRIBUTE_CODE->value;
 
                 $item[$attrCode] = $product->getCustomAttribute($attrCode) ?
                     'Value: ' . $product->getCustomAttribute($attrCode)->getValue() :

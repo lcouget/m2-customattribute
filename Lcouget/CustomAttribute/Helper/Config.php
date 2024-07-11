@@ -28,7 +28,7 @@ class Config
     public function isCustomAttributeEnabled(): bool
     {
         return (bool) $this->scopeConfig->getValue(
-            Constants::XML_PATH_CUSTOMATTRIBUTE_ENABLE
+            Constants::XML_PATH_CUSTOMATTRIBUTE_ENABLE->value
         );
     }
 

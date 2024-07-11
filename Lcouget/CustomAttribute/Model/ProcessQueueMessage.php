@@ -81,7 +81,7 @@ class ProcessQueueMessage
 
             $this->productAction->updateAttributes(
                 $productIds,
-                [Constants::CUSTOM_ATTRIBUTE_CODE => $data['custom_attribute_value']],
+                [Constants::CUSTOM_ATTRIBUTE_CODE->value => $data['custom_attribute_value']],
                 0
             );
 

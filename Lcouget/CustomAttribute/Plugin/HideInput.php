@@ -33,10 +33,10 @@ class HideInput
     public function afterGetMeta(ProductDataProvider $subject, array $meta): array
     {
         if (!$this->config->isCustomAttributeEnabled() &&
-            isset($meta['product-details']['children']['container_'.Constants::CUSTOM_ATTRIBUTE_CODE])) {
+            isset($meta['product-details']['children']['container_'. Constants::CUSTOM_ATTRIBUTE_CODE->value])) {
             $meta['product-details']
-            ['children']['container_'.Constants::CUSTOM_ATTRIBUTE_CODE]['children']
-            [Constants::CUSTOM_ATTRIBUTE_CODE]['arguments']['data']['config']['visible'] = false;
+            ['children']['container_'. Constants::CUSTOM_ATTRIBUTE_CODE->value]['children']
+            [Constants::CUSTOM_ATTRIBUTE_CODE->value]['arguments']['data']['config']['visible'] = false;
         }
 
         return $meta;

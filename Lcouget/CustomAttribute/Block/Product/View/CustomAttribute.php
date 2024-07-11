@@ -84,7 +84,7 @@ class CustomAttribute extends \Magento\Framework\View\Element\Template
 
         if ($this->isCustomAttributeEnabled()) {
             try {
-                $customAttribute = $this->productAttributeRepository->get(Constants::CUSTOM_ATTRIBUTE_CODE);
+                $customAttribute = $this->productAttributeRepository->get(Constants::CUSTOM_ATTRIBUTE_CODE->value);
 
                 $data = [
                     'label' => $customAttribute->getStoreLabel(),

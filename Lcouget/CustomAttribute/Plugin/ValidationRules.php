@@ -26,7 +26,7 @@ class ValidationRules
         array $data
     ): array {
         $rules = $proceed($attribute, $data);
-        if ($attribute->getAttributeCode() === Constants::CUSTOM_ATTRIBUTE_CODE) {
+        if ($attribute->getAttributeCode() === Constants::CUSTOM_ATTRIBUTE_CODE->value) {
 
             $rules = [
                 'no-whitespace' => true,

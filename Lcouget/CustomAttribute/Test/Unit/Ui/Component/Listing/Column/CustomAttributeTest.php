@@ -86,7 +86,7 @@ class CustomAttributeTest extends TestCase
         $this->attributeInterface
             ->expects($this->any())
             ->method('getValue')
-            ->willReturn(Constants::CUSTOM_ATTRIBUTE_CODE);
+            ->willReturn(Constants::CUSTOM_ATTRIBUTE_CODE->value);
 
         $this->productInterface = $this
             ->getMockBuilder(ProductInterface::class)
@@ -152,7 +152,7 @@ class CustomAttributeTest extends TestCase
                 'items' => [
                     [
                         'entity_id' => 1,
-                        Constants::CUSTOM_ATTRIBUTE_CODE => 'Value: ' . Constants::CUSTOM_ATTRIBUTE_CODE
+                        Constants::CUSTOM_ATTRIBUTE_CODE->value => 'Value: ' . Constants::CUSTOM_ATTRIBUTE_CODE->value
                     ]
                 ]
             ]

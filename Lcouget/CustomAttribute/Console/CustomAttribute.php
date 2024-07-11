@@ -133,32 +133,32 @@ class CustomAttribute extends Command
 
         //Arguments
         $this->addArgument(
-            Constants::ATTR_VALUE,
+            Constants::ATTR_VALUE->value,
             InputOption::VALUE_OPTIONAL,
             'New custom attribute value (Must be alphanumeric with no whitespaces).'
         );
 
         //Options
         $this->addOption(
-            Constants::ATTR_ENABLE,
+            Constants::ATTR_ENABLE->value,
             '-e',
             InputOption::VALUE_NONE,
             'Enable Custom Attribute for all products'
         );
         $this->addOption(
-            Constants::ATTR_DISABLE,
+            Constants::ATTR_DISABLE->value,
             '-d',
             InputOption::VALUE_NONE,
             'Disable Custom Attribute for all products'
         );
         $this->addOption(
-            Constants::ATTR_PRODUCT_SKU,
+            Constants::ATTR_PRODUCT_SKU->value,
             '-s',
             InputOption::VALUE_OPTIONAL,
             'Change custom attribute for selected Product SKU'
         );
         $this->addOption(
-            Constants::ATTR_ASYNC,
+            Constants::ATTR_ASYNC->value,
             '-a',
             InputOption::VALUE_NONE,
             'Change custom attribute for all products asynchronously'
@@ -176,7 +176,7 @@ class CustomAttribute extends Command
     protected function execute(InputInterface $input, OutputInterface $output): int
     {
         //Check if options or arguments are set
-        if (!$this->optionsAreSet($input->getOptions()) && empty($input->getArgument(Constants::ATTR_VALUE))) {
+        if (!$this->optionsAreSet($input->getOptions()) && empty($input->getArgument(Constants::ATTR_VALUE->value))) {
             $output->writeln(
                 '<error>No options or arguments provided. Use --help for more information.</error>'
             );
@@ -184,7 +184,7 @@ class CustomAttribute extends Command
         }
 
         //Option to Enable module
-        if ($input->getOption(Constants::ATTR_ENABLE)) {
+        if ($input->getOption(Constants::ATTR_ENABLE->value)) {
             if ($this->config->isCustomAttributeEnabled()) {
                 $output->writeln('<info>Module is already enabled.</info>');
                 return Cli::RETURN_FAILURE;
@@ -199,7 +199,7 @@ class CustomAttribute extends Command
         }
 
         //Option to Disable module
-        if ($input->getOption(Constants::ATTR_DISABLE)) {
+        if ($input->getOption(Constants::ATTR_DISABLE->value)) {
             if (!$this->config->isCustomAttributeEnabled()) {
                 $output->writeln('<info>Module is already disabled.</info>');
                 return Cli::RETURN_FAILURE;
@@ -214,13 +214,13 @@ class CustomAttribute extends Command
         }
 
         //Option to Update Product custom attribute by SKU with passed value
-        if ($input->getOption(Constants::ATTR_PRODUCT_SKU)) {
+        if ($input->getOption(Constants::ATTR_PRODUCT_SKU->value)) {
             if (!$this->config->isCustomAttributeEnabled()) {
                 $output->writeln('<info>Module is disabled. Cannot update custom attribute.</info>');
                 return Cli::RETURN_FAILURE;
             }
 
-            if (!$this->checkParameterRules($input->getArgument(Constants::ATTR_VALUE)[0])) {
+            if (!$this->checkParameterRules($input->getArgument(Constants::ATTR_VALUE->value)[0])) {
                 $output->writeln(
                     '<error>Provided value is not valid. Use --help for more information.</error>'
                 );
@@ -229,7 +229,7 @@ class CustomAttribute extends Command
 
             $output->writeln(
                 '<info>Provided product SKU is `' .
-                $input->getOption(Constants::ATTR_PRODUCT_SKU) .
+                $input->getOption(Constants::ATTR_PRODUCT_SKU->value) .
                 '`</info>'
             );
 
@@ -237,13 +237,13 @@ class CustomAttribute extends Command
 
             try {
                 $this->updateProductBySku(
-                    $input->getOption(Constants::ATTR_PRODUCT_SKU),
-                    $input->getArgument(Constants::ATTR_VALUE)[0]
+                    $input->getOption(Constants::ATTR_PRODUCT_SKU->value),
+                    $input->getArgument(Constants::ATTR_VALUE->value)[0]
                 );
 
                 $output->writeln(
                     '<info>Custom attribute updated successfully for product with SKU `' .
-                    $input->getOption(Constants::ATTR_PRODUCT_SKU) .
+                    $input->getOption(Constants::ATTR_PRODUCT_SKU->value) .
                     '`.</info>'
                 );
 
@@ -258,20 +258,20 @@ class CustomAttribute extends Command
         }
 
         //Option to Update all Products custom attribute with passed value asynchronously
-        if ($input->getOption(Constants::ATTR_ASYNC)) {
+        if ($input->getOption(Constants::ATTR_ASYNC->value)) {
             if (!$this->config->isCustomAttributeEnabled()) {
                 $output->writeln('<info>Module is disabled. Cannot update custom attribute.</info>');
                 return Cli::RETURN_FAILURE;
             }
 
-            if (!$this->checkParameterRules($input->getArgument(Constants::ATTR_VALUE)[0])) {
+            if (!$this->checkParameterRules($input->getArgument(Constants::ATTR_VALUE->value)[0])) {
                 $output->writeln(
                     '<error>Provided value is not valid. Use --help for more information.</error>'
                 );
                 return Cli::RETURN_FAILURE;
             }
 
-            $this->asyncUpdateAllProducts($input->getArgument(Constants::ATTR_VALUE)[0]);
+            $this->asyncUpdateAllProducts($input->getArgument(Constants::ATTR_VALUE->value)[0]);
             return Cli::RETURN_SUCCESS;
         }
 
@@ -281,7 +281,7 @@ class CustomAttribute extends Command
             return Cli::RETURN_FAILURE;
         }
 
-        if (!$this->checkParameterRules($input->getArgument(Constants::ATTR_VALUE)[0])) {
+        if (!$this->checkParameterRules($input->getArgument(Constants::ATTR_VALUE->value)[0])) {
             $output->writeln(
                 '<error>Provided value is not valid. Use --help for more information.</error>'
             );
@@ -290,14 +290,14 @@ class CustomAttribute extends Command
 
         $output->writeln(
             '<info>Provided value is `' .
-            $input->getArgument(Constants::ATTR_VALUE)[0] .
+            $input->getArgument(Constants::ATTR_VALUE->value)[0] .
             '`</info>'
         );
 
         $output->writeln('<info>Setting value...</info>');
 
         try {
-            $this->updateAllProducts($input->getArgument(Constants::ATTR_VALUE)[0]);
+            $this->updateAllProducts($input->getArgument(Constants::ATTR_VALUE->value)[0]);
             $output->writeln('<info>Custom attribute updated successfully for all products.</info>');
         } catch (LocalizedException|NoSuchEntityException|CouldNotSaveException $e) {
             $output->writeln(
@@ -319,7 +319,7 @@ class CustomAttribute extends Command
     {
         $value = $enable ? 1 : 0;
         $this->configWriter->save(
-            Constants::XML_PATH_CUSTOMATTRIBUTE_ENABLE,
+            Constants::XML_PATH_CUSTOMATTRIBUTE_ENABLE->value,
             $value
         );
     }
@@ -347,7 +347,7 @@ class CustomAttribute extends Command
 
             $this->productAction->updateAttributes(
                 $productIds,
-                [Constants::CUSTOM_ATTRIBUTE_CODE => $value],
+                [Constants::CUSTOM_ATTRIBUTE_CODE->value => $value],
                 0
             );
         } catch (\Exception $e) {
@@ -364,7 +364,7 @@ class CustomAttribute extends Command
     private function asyncUpdateAllProducts(string $value): void
     {
         $publishData = [ 'custom_attribute_value' => $value ];
-        $this->publisher->publish(Constants::QUEUE_TOPIC, $this->jsonHelper->jsonEncode($publishData));
+        $this->publisher->publish(Constants::QUEUE_TOPIC->value, $this->jsonHelper->jsonEncode($publishData));
     }
 
     /**
@@ -391,7 +391,7 @@ class CustomAttribute extends Command
 
         try {
             $product = $this->productRepository->get($sku);
-            $product->setData(Constants::CUSTOM_ATTRIBUTE_CODE, $value);
+            $product->setData(Constants::CUSTOM_ATTRIBUTE_CODE->value, $value);
             $this->productRepository->save($product);
         } catch (NoSuchEntityException $e) {
             throw new NoSuchEntityException(
@@ -425,9 +425,9 @@ class CustomAttribute extends Command
     private function optionsAreSet(array $options): bool
     {
         $inputOptions = [
-            Constants::ATTR_ENABLE,
-            Constants::ATTR_DISABLE,
-            Constants::ATTR_PRODUCT_SKU
+            Constants::ATTR_ENABLE->value,
+            Constants::ATTR_DISABLE->value,
+            Constants::ATTR_PRODUCT_SKU->value
         ];
 
         foreach ($options as $option) {
