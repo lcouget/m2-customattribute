@@ -128,3 +128,9 @@ _Note: on all options, caches are automatically refreshed._
 
 _Note 2: New attribute value is also validated with same validation rules applied on frontend._
 
+### Released Versions
+- 1.0.0:
+    - Initial Release.
+- 1.0.1:
+    - uptateAllProducts Console method optimized.
+    - added AMQP to perform updateAllProducts option asynchronously.
